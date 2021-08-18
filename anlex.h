@@ -30,7 +30,7 @@ typedef struct entrada{
     int compLex;
     char lexema[TAMLEX];	
     struct entrada *tipoDato;
-    char componentelexico[TAMLEX];
+    char componenteLexico[TAMLEX];
 } entrada;
 
 typedef struct {
