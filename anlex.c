@@ -44,27 +44,32 @@ void getToken(){
 			numLinea++;
 		}
 
-		else if (isalpha(c)){
-			//es un identificador (o palabra reservada)
+		else if (tolower(c)=='t' || tolower(c)=='f' || tolower(c)=='n'){
+			//es un boolean o null
 			i=0;
 			do{
 				lexema[i]=c;
 				i++;
 				c=fgetc(entrada_json);
-				if (i>=TAMLEX)
-					error("Longitud de la palabra reservada excede tamaño de buffer");
-			}while(isalpha(c) || isdigit(c));
+			}while(isalpha(c));
 			lexema[i]='\0';
 			if (c!=EOF)
 				ungetc(c,entrada_json);
 			else
 				c=0;
-			t.pe=buscar(lexema);
-			t.compLex=t.pe->compLex;
-			if (t.pe->compLex==-1)
-			{
-				char cad [300] = "Esta palabra reservada no pertenece al lenguaje: ";
-				error(strcat(cad, lexema));
+			
+			if (strcmp(lexema, "true")==0 || strcmp(lexema, "TRUE")==0){
+				t.pe=buscar("true");
+				t.compLex=PR_TRUE;
+			}else if (strcmp(lexema, "false")==0 || strcmp(lexema, "FALSE")==0){
+				t.pe=buscar("false");
+				t.compLex=PR_FALSE;
+			}else if (strcmp(lexema, "null")==0 || strcmp(lexema, "NULL")==0){
+				t.pe=buscar("null");
+				t.compLex=PR_NULL;
+			}else{
+				t.pe = NULL;
+				error("No se reconoce");
 			}
 			break;
 		}
@@ -181,9 +186,12 @@ void getToken(){
 				case -1:
 						if (c==EOF)
 							error("No se esperaba el fin de archivo");
-						else
+						else{
+                                                	if (c=='\n')
+ 								sprintf(msg,"No se esperaba '\\n'");	       
 							error(msg);
-						strcpy(t.pe->componenteLexico,"");
+                                                }
+                                                t.pe = NULL;
 						acepto=-1;
 				}
 			}
@@ -246,19 +254,14 @@ void getToken(){
 			}else{
 				c=0;
 			}
-			if (c==0){
-				t.compLex=EOF;
-				t.pe=NULL;
-			}else{
+			t.pe=buscar(lexema);
+			if (t.pe->compLex==-1){
+				strcpy(e.lexema,lexema);
+				e.compLex=STRING;
+				strcpy(e.componenteLexico,"STRING");
+				insertar(e);
 				t.pe=buscar(lexema);
-				if (t.pe->compLex==-1){
-					strcpy(e.lexema,lexema);
-					e.compLex=STRING;
-					strcpy(e.componenteLexico,"STRING");
-					insertar(e);
-					t.pe=buscar(lexema);
-					t.compLex=STRING;
-				}
+				t.compLex=STRING;
 			}
 			break;
 		}
@@ -299,7 +302,10 @@ int main(int argc,char* args[])
 		}
 		while (t.compLex!=EOF){
 			getToken();
-			if (t.compLex!=EOF) fprintf(salida,"%s ", t.pe->componenteLexico);
+			if (t.compLex!=EOF) 
+				if (t.pe != NULL){
+                                    fprintf(salida,"%s ", t.pe->componenteLexico);
+				}		
 		}
 		fclose(entrada_json);
         fclose(salida);
